@@ -1,0 +1,53 @@
+rabbitmq:
+  image: rabbitmq:3-management
+  ports:
+    - 5672:5672
+    - 15672:15672
+
+producer_v1:
+  image: producer
+  environment:
+    RABBITMQ_HOST: rabbitmq
+    API_VERSION: 1
+  links:
+    - rabbitmq
+
+producer_v2:
+  image: producer
+  environment:
+    RABBITMQ_HOST: rabbitmq
+    API_VERSION: 2
+  links:
+    - rabbitmq
+
+producer_v3:
+  image: producer
+  environment:
+    RABBITMQ_HOST: rabbitmq
+    API_VERSION: 3
+  links:
+    - rabbitmq
+
+consumer_v1:
+  image: consumer
+  environment:
+    RABBITMQ_HOST: rabbitmq
+    API_VERSION: 1
+  links:
+    - rabbitmq
+
+consumer_v2:
+  image: consumer
+  environment:
+    RABBITMQ_HOST: rabbitmq
+    API_VERSION: 2
+  links:
+    - rabbitmq
+
+consumer_v3:
+  image: consumer
+  environment:
+    RABBITMQ_HOST: rabbitmq
+    API_VERSION: 3
+  links:
+    - rabbitmq
