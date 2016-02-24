@@ -173,9 +173,9 @@ To completely remove the VM:
 
 RPC Workflow ([Rabbit Example](https://www.rabbitmq.com/tutorials/tutorial-six-python.html)):
 
- - [API](https://trizic.github.io/rmq-example/api.html)
- - [API Worker](https://trizic.github.io/rmq-example/api-worker.html)
+ - [API](https://trizic.github.io/rmq-example/docs/api.html)
+ - [API Worker](https://trizic.github.io/rmq-edocs/xample/docs/api-worker.html)
 
 Topic Exchange ([Rabbit Example](https://www.rabbitmq.com/tutorials/tutorial-five-python.html)):
-  - [Consumer](https://trizic.github.io/rmq-example/consumer.html)
-  - [Producer](https://trizic.github.io/rmq-example/producer.html)
+  - [Consumer](https://trizic.github.io/rmq-example/docs/consumer.html)
+  - [Producer](https://trizic.github.io/rmq-example/docs/producer.html)
