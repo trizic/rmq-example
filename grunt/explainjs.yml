@@ -1,0 +1,8 @@
+dist:
+  options:
+    showFilename: false
+  files:
+    - '../rmq-example-gh-pages/docs/consumer.html': 'docker/consumer/app/consumer.js'
+    - '../rmq-example-gh-pages/docs/producer.html': 'docker/producer/app/producer.js'
+    - '../rmq-example-gh-pages/docs/api.html': 'docker/api/app/api.js'
+    - '../rmq-example-gh-pages/docs/api-worker.html': 'docker/api-worker/app/worker.js'
