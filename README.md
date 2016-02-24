@@ -32,7 +32,9 @@ Install Virtualbox:
     brew cask install virtualbox --appdir=/Applications
 
 Install Docker components:
-
+if you need to update an already installed docker:
+    brew link docker --overwrite docker
+then continue on:
     brew install docker docker-machine docker-compose
 
 ## Start up Docker
