@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title> | ExplainJS by grunt-explainjs</title>
+  <link rel="stylesheet" type="text/css" href="css/unsemantic.css"/>
+  <link rel="stylesheet" type="text/css" href="css/explain.css"/>
+  <link href='http://fonts.googleapis.com/css?family=Inconsolata|Open+Sans:300italic,300,700' rel='stylesheet' type='text/css'>
+  <meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1" />
+</head>
+
+<body>
+  <div class='page-menu'>
+    <div class='grid-container'>
+      <div class='grid-60 mobile-grid-100'>
+        <a class='logo' href='http://www.explainjs.com'>ExplainJS</a> by <a class='logo' href='https://github.com/collinforrester/grunt-explainjs'>grunt-explainjs</a>
+        
+      </div>
+    </div>
+  </div>
+  <div class='sections grid-container'>
+    <div class='code-bg hide-on-mobile'>
+    </div>
+    <br />
+    <br />
+    
+      <div class='section'>
+        <div class='comment grid-40 mobile-grid-100 not-empty'>
+          
+        </div>
+        <div class='code grid-60 mobile-grid-100 not-empty'>
+          <pre>import amqp from 'amqp';
+import faker from 'faker';
+import util from 'util';
+import program from 'commander';
+</pre>
+        </div>
+      </div>
+      <div class='clear'>
+      </div>
+    
+      <div class='section'>
+        <div class='comment grid-40 mobile-grid-100 not-empty'>
+          <p>Parse the command line arguments</p>
+        </div>
+        <div class='code grid-60 mobile-grid-100 not-empty'>
+          <pre>program.version('0.0.1')
+  .option('-r, --rabbit [host]', 'RabbitMQ Address')
+  .option('-a, --api [version]', 'Version #')
+  .parse(process.argv);
+</pre>
+        </div>
+      </div>
+      <div class='clear'>
+      </div>
+    
+      <div class='section'>
+        <div class='comment grid-40 mobile-grid-100 not-empty'>
+          <p>Setup queue information</p>
+        </div>
+        <div class='code grid-60 mobile-grid-100 not-empty'>
+          <pre>const EXCHANGE_NAME = 'example';
+const ROUTING_KEY = `v${program.api}.example`;
+const QUEUE_NAME = `v${program.api}.example.q`;
+</pre>
+        </div>
+      </div>
+      <div class='clear'>
+      </div>
+    
+      <div class='section'>
+        <div class='comment grid-40 mobile-grid-100 not-empty'>
+          <p>Docker only prints info from stderr.  Let&#39;s pipe stdout to stderr for  debugging.</p>
+        </div>
+        <div class='code grid-60 mobile-grid-100 not-empty'>
+          <pre>process.stdout.pipe(process.stderr)
+</pre>
+        </div>
+      </div>
+      <div class='clear'>
+      </div>
+    
+      <div class='section'>
+        <div class='comment grid-40 mobile-grid-100 not-empty'>
+          <p>Connect to RabbitMQ</p>
+        </div>
+        <div class='code grid-60 mobile-grid-100 not-empty'>
+          <pre>let connection = amqp.createConnection({ host: program.rabbit });
+</pre>
+        </div>
+      </div>
+      <div class='clear'>
+      </div>
+    
+      <div class='section'>
+        <div class='comment grid-40 mobile-grid-100 not-empty'>
+          <p>When the connection is ready...</p>
+        </div>
+        <div class='code grid-60 mobile-grid-100 not-empty'>
+          <pre>connection.on('ready', function () {
+  console.log(`RabbitMQ Connection ready at "${program.rabbit}"`);
+</pre>
+        </div>
+      </div>
+      <div class='clear'>
+      </div>
+    
+      <div class='section'>
+        <div class='comment grid-40 mobile-grid-100 not-empty'>
+          <p>...connect to the exchange</p>
+        </div>
+        <div class='code grid-60 mobile-grid-100 not-empty'>
+          <pre>  connection.exchange(EXCHANGE_NAME, {
+    type: 'topic',
+    confirm: true,
+    autoDelete: false
+  }, (exchange) => {
+    console.log(` Connected to exchange '${EXCHANGE_NAME}'`);
+</pre>
+        </div>
+      </div>
+      <div class='clear'>
+      </div>
+    
+      <div class='section'>
+        <div class='comment grid-40 mobile-grid-100 not-empty'>
+          <p>Connect to the queue</p>
+        </div>
+        <div class='code grid-60 mobile-grid-100 not-empty'>
+          <pre>    connection.queue(QUEUE_NAME, {autoDelete: false}, function (q) {</pre>
+        </div>
+      </div>
+      <div class='clear'>
+      </div>
+    
+      <div class='section'>
+        <div class='comment grid-40 mobile-grid-100 not-empty'>
+          <p>Bind the queue to the exchange with a routing key</p>
+        </div>
+        <div class='code grid-60 mobile-grid-100 not-empty'>
+          <pre>      let bindExpr = `v${program.api}.example`;
+      q.bind(exchange, bindExpr);
+      console.log(` Queue '${QUEUE_NAME}' bound to Exchange ` +
+        `'${EXCHANGE_NAME}' with '${bindExpr}'`);
+</pre>
+        </div>
+      </div>
+      <div class='clear'>
+      </div>
+    
+      <div class='section'>
+        <div class='comment grid-40 mobile-grid-100 not-empty'>
+          <p>Do something a bunch of times</p>
+        </div>
+        <div class='code grid-60 mobile-grid-100 not-empty'>
+          <pre>      setInterval(() => {
+        let payload = { v: program.api, name: `${faker.name.findName()}` };
+</pre>
+        </div>
+      </div>
+      <div class='clear'>
+      </div>
+    
+      <div class='section'>
+        <div class='comment grid-40 mobile-grid-100 not-empty'>
+          <p>Publish a payload with the appropriate routing key</p>
+        </div>
+        <div class='code grid-60 mobile-grid-100 not-empty'>
+          <pre>        exchange.publish(ROUTING_KEY,
+          payload,</pre>
+        </div>
+      </div>
+      <div class='clear'>
+      </div>
+    
+      <div class='section'>
+        <div class='comment grid-40 mobile-grid-100 not-empty'>
+          <p>Options</p>
+        </div>
+        <div class='code grid-60 mobile-grid-100 not-empty'>
+          <pre>          { mandatory: true },
+          (error) => {</pre>
+        </div>
+      </div>
+      <div class='clear'>
+      </div>
+    
+      <div class='section'>
+        <div class='comment grid-40 mobile-grid-100 not-empty'>
+          <p>Handle any publish errors</p>
+        </div>
+        <div class='code grid-60 mobile-grid-100 not-empty'>
+          <pre>            if (error) {
+              return console.error(
+                `Unable to publish to the exchange '${EXCHANGE_NAME}'`
+              );
+            }
+</pre>
+        </div>
+      </div>
+      <div class='clear'>
+      </div>
+    
+      <div class='section'>
+        <div class='comment grid-40 mobile-grid-100 not-empty'>
+          <p>Do stuff on successful publish</p>
+        </div>
+        <div class='code grid-60 mobile-grid-100 not-empty'>
+          <pre>            console.log( `Published '${util.inspect(payload)}' to ` +
+              `exchange '${EXCHANGE_NAME}'`);
+          }
+        );
+      }, 500);
+    });
+  });
+});
+</pre>
+        </div>
+      </div>
+      <div class='clear'>
+      </div>
+    
+      <div class='section'>
+        <div class='comment grid-40 mobile-grid-100 not-empty'>
+          <p>Report RabbitMQ connection errors, but don&#39;t exit.  This will keep trying to  connect.</p>
+        </div>
+        <div class='code grid-60 mobile-grid-100 not-empty'>
+          <pre>connection.on('error', (err) => {
+  console.error('ERR:', err);
+});
+</pre>
+        </div>
+      </div>
+      <div class='clear'>
+      </div>
+    
+      <div class='section'>
+        <div class='comment grid-40 mobile-grid-100 not-empty'>
+          <p>Catch all unhandled exceptions.  Report and bail out.</p>
+        </div>
+        <div class='code grid-60 mobile-grid-100 not-empty'>
+          <pre>process.on('uncaughtexception', (e) => {
+  console.error(`ERR: ${e}`);
+  process.exit(70);
+});
+</pre>
+        </div>
+      </div>
+      <div class='clear'>
+      </div>
+    
+      <div class='section'>
+        <div class='comment grid-40 mobile-grid-100 not-empty'>
+          <p>Do anything necessary to shutdown gracefully</p>
+        </div>
+        <div class='code grid-60 mobile-grid-100 not-empty'>
+          <pre>process.on('SIGINT', () => {
+  console.error('\nGracefully shutting down');
+  process.exit();
+});
+
+.</pre>
+        </div>
+      </div>
+      <div class='clear'>
+      </div>
+    
+  </div>
+</body>
+</html>

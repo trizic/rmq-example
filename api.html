@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title> | ExplainJS by grunt-explainjs</title>
+  <link rel="stylesheet" type="text/css" href="css/unsemantic.css"/>
+  <link rel="stylesheet" type="text/css" href="css/explain.css"/>
+  <link href='http://fonts.googleapis.com/css?family=Inconsolata|Open+Sans:300italic,300,700' rel='stylesheet' type='text/css'>
+  <meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1" />
+</head>
+
+<body>
+  <div class='page-menu'>
+    <div class='grid-container'>
+      <div class='grid-60 mobile-grid-100'>
+        <a class='logo' href='http://www.explainjs.com'>ExplainJS</a> by <a class='logo' href='https://github.com/collinforrester/grunt-explainjs'>grunt-explainjs</a>
+        
+      </div>
+    </div>
+  </div>
+  <div class='sections grid-container'>
+    <div class='code-bg hide-on-mobile'>
+    </div>
+    <br />
+    <br />
+    
+      <div class='section'>
+        <div class='comment grid-40 mobile-grid-100 not-empty'>
+          
+        </div>
+        <div class='code grid-60 mobile-grid-100 not-empty'>
+          <pre>import restify from 'restify';
+import pkg from './package.json';
+import amqp from 'amqp';
+import program from 'commander';
+import uuid from 'uuid';
+</pre>
+        </div>
+      </div>
+      <div class='clear'>
+      </div>
+    
+      <div class='section'>
+        <div class='comment grid-40 mobile-grid-100 not-empty'>
+          <p>Parse the command line arguments</p>
+        </div>
+        <div class='code grid-60 mobile-grid-100 not-empty'>
+          <pre>program.version('0.0.1')
+  .option('-r, --rabbit [host]', 'RabbitMQ Address')
+  .option('-a, --api [version]', 'Version #')
+  .option('-p, --port [port number]', 'Port', parseInt)
+  .parse(process.argv);
+</pre>
+        </div>
+      </div>
+      <div class='clear'>
+      </div>
+    
+      <div class='section'>
+        <div class='comment grid-40 mobile-grid-100 not-empty'>
+          <p>Docker only prints info from stderr.  Let&#39;s pipe stdout to stderr for  debugging.</p>
+        </div>
+        <div class='code grid-60 mobile-grid-100 not-empty'>
+          <pre>process.stdout.pipe(process.stderr)
+</pre>
+        </div>
+      </div>
+      <div class='clear'>
+      </div>
+    
+      <div class='section'>
+        <div class='comment grid-40 mobile-grid-100 not-empty'>
+          <p>Setup queue information</p>
+        </div>
+        <div class='code grid-60 mobile-grid-100 not-empty'>
+          <pre>const VERSION = program.api || 0;
+const RABBIT = program.rabbit || 'rabbitmq';
+const EXCHANGE_NAME = 'api';
+const ROUTING_KEY = `v${VERSION}.api`;
+const QUEUE_NAME = `v${VERSION}.api.q`;
+const RESPONSE_QUEUE = `response.api.q`;
+const TIMEOUT = 5;
+let reqExchange;
+</pre>
+        </div>
+      </div>
+      <div class='clear'>
+      </div>
+    
+      <div class='section'>
+        <div class='comment grid-40 mobile-grid-100 not-empty'>
+          <p>Cache for response handles by correlation id</p>
+        </div>
+        <div class='code grid-60 mobile-grid-100 not-empty'>
+          <pre>let cache = {};
+</pre>
+        </div>
+      </div>
+      <div class='clear'>
+      </div>
+    
+      <div class='section'>
+        <div class='comment grid-40 mobile-grid-100 not-empty'>
+          <p>Create a REST server</p>
+        </div>
+        <div class='code grid-60 mobile-grid-100 not-empty'>
+          <pre>let server = restify.createServer();
+server.use(restify.bodyParser());
+</pre>
+        </div>
+      </div>
+      <div class='clear'>
+      </div>
+    
+      <div class='section'>
+        <div class='comment grid-40 mobile-grid-100 not-empty'>
+          <p>Handle POST /echo</p>
+        </div>
+        <div class='code grid-60 mobile-grid-100 not-empty'>
+          <pre>server.post('/echo', (req, res, next) => {
+</pre>
+        </div>
+      </div>
+      <div class='clear'>
+      </div>
+    
+      <div class='section'>
+        <div class='comment grid-40 mobile-grid-100 not-empty'>
+          <p>Get a unique correlation id so the response message can find it&#39;s way back  here</p>
+        </div>
+        <div class='code grid-60 mobile-grid-100 not-empty'>
+          <pre>  let correlationId = uuid.v4();
+</pre>
+        </div>
+      </div>
+      <div class='clear'>
+      </div>
+    
+      <div class='section'>
+        <div class='comment grid-40 mobile-grid-100 not-empty'>
+          <p>Start a timeout event, so we don&#39;t spin indefinitely</p>
+        </div>
+        <div class='code grid-60 mobile-grid-100 not-empty'>
+          <pre>  let timeoutId = setTimeout(() => {</pre>
+        </div>
+      </div>
+      <div class='clear'>
+      </div>
+    
+      <div class='section'>
+        <div class='comment grid-40 mobile-grid-100 not-empty'>
+          <p>Remove the response handle from the cache</p>
+        </div>
+        <div class='code grid-60 mobile-grid-100 not-empty'>
+          <pre>    delete cache[correlationId];
+
+    return next(new Error(`Response timed out after ${TIMEOUT}s.`));
+  }, TIMEOUT * 1000);
+</pre>
+        </div>
+      </div>
+      <div class='clear'>
+      </div>
+    
+      <div class='section'>
+        <div class='comment grid-40 mobile-grid-100 not-empty'>
+          <p>Store the response object</p>
+        </div>
+        <div class='code grid-60 mobile-grid-100 not-empty'>
+          <pre>  cache[correlationId] = {
+    response: res,
+    next: next,
+    timeoutId: timeoutId
+  };
+</pre>
+        </div>
+      </div>
+      <div class='clear'>
+      </div>
+    
+      <div class='section'>
+        <div class='comment grid-40 mobile-grid-100 not-empty'>
+          <p>Send the REQUEST with the reply to queue</p>
+        </div>
+        <div class='code grid-60 mobile-grid-100 not-empty'>
+          <pre>  reqExchange.publish(ROUTING_KEY,</pre>
+        </div>
+      </div>
+      <div class='clear'>
+      </div>
+    
+      <div class='section'>
+        <div class='comment grid-40 mobile-grid-100 not-empty'>
+          <p>Payload</p>
+        </div>
+        <div class='code grid-60 mobile-grid-100 not-empty'>
+          <pre>    req.body, {</pre>
+        </div>
+      </div>
+      <div class='clear'>
+      </div>
+    
+      <div class='section'>
+        <div class='comment grid-40 mobile-grid-100 not-empty'>
+          <p>Options</p>
+        </div>
+        <div class='code grid-60 mobile-grid-100 not-empty'>
+          <pre>    replyTo: RESPONSE_QUEUE,
+    correlationId: correlationId,
+  }, () => {
+    console.log('Published message:', req.body);
+  });
+});
+</pre>
+        </div>
+      </div>
+      <div class='clear'>
+      </div>
+    
+      <div class='section'>
+        <div class='comment grid-40 mobile-grid-100 not-empty'>
+          <p>Connect to RabbitMQ</p>
+        </div>
+        <div class='code grid-60 mobile-grid-100 not-empty'>
+          <pre>let connection = amqp.createConnection({
+  host: program.rabbit
+});
+</pre>
+        </div>
+      </div>
+      <div class='clear'>
+      </div>
+    
+      <div class='section'>
+        <div class='comment grid-40 mobile-grid-100 not-empty'>
+          <p>When the rabbit connection is ready...</p>
+        </div>
+        <div class='code grid-60 mobile-grid-100 not-empty'>
+          <pre>connection.on('ready', function() {
+  console.log(`RabbitMQ Connection ready at "${RABBIT}"`);
+</pre>
+        </div>
+      </div>
+      <div class='clear'>
+      </div>
+    
+      <div class='section'>
+        <div class='comment grid-40 mobile-grid-100 not-empty'>
+          <p>..connect to the REQUEST exchange</p>
+        </div>
+        <div class='code grid-60 mobile-grid-100 not-empty'>
+          <pre>  connection.exchange(EXCHANGE_NAME, {
+    type: 'topic',
+    confirm: true,
+    autoDelete: false
+  }, (exchange) => {
+    console.log(` Connected to exchange '${EXCHANGE_NAME}'`);
+</pre>
+        </div>
+      </div>
+      <div class='clear'>
+      </div>
+    
+      <div class='section'>
+        <div class='comment grid-40 mobile-grid-100 not-empty'>
+          <p>Expose the request exchange for use in the routes</p>
+        </div>
+        <div class='code grid-60 mobile-grid-100 not-empty'>
+          <pre>    reqExchange = exchange;
+</pre>
+        </div>
+      </div>
+      <div class='clear'>
+      </div>
+    
+      <div class='section'>
+        <div class='comment grid-40 mobile-grid-100 not-empty'>
+          <p>Connect to the REQUEST queue</p>
+        </div>
+        <div class='code grid-60 mobile-grid-100 not-empty'>
+          <pre>    connection.queue(QUEUE_NAME, {
+      autoDelete: false
+    }, function(q) {
+</pre>
+        </div>
+      </div>
+      <div class='clear'>
+      </div>
+    
+      <div class='section'>
+        <div class='comment grid-40 mobile-grid-100 not-empty'>
+          <p>Bind the queue to the exchange with a routing key</p>
+        </div>
+        <div class='code grid-60 mobile-grid-100 not-empty'>
+          <pre>      let bindExpr = `v${VERSION}.api`;
+      q.bind(exchange, bindExpr);
+      console.log(` Queue '${QUEUE_NAME}' bound to Exchange ` +
+        `'${EXCHANGE_NAME}' with '${bindExpr}'`);
+</pre>
+        </div>
+      </div>
+      <div class='clear'>
+      </div>
+    
+      <div class='section'>
+        <div class='comment grid-40 mobile-grid-100 not-empty'>
+          <p>Now that RabbitMQ is initialized, let&#39;s start the REST server</p>
+        </div>
+        <div class='code grid-60 mobile-grid-100 not-empty'>
+          <pre>      let port = program.port || 9090;
+      server.listen({
+        host: '0.0.0.0',
+        port: port
+      }, () => {
+        console.log('-----------------------------------------');
+        console.log(` ${pkg.name}-${pkg.version} listening on: ` + port);
+        console.log('-----------------------------------------');
+      });
+    });
+  });
+</pre>
+        </div>
+      </div>
+      <div class='clear'>
+      </div>
+    
+      <div class='section'>
+        <div class='comment grid-40 mobile-grid-100 not-empty'>
+          <p>Connect to the RESPONSE queue</p>
+        </div>
+        <div class='code grid-60 mobile-grid-100 not-empty'>
+          <pre>  connection.queue(RESPONSE_QUEUE, {
+    autoDelete: false,
+    arguments: {
+      'x-message-ttl': 10000
+    }
+  }, (q) => {
+    console.log(' Connected to response queue');
+</pre>
+        </div>
+      </div>
+      <div class='clear'>
+      </div>
+    
+      <div class='section'>
+        <div class='comment grid-40 mobile-grid-100 not-empty'>
+          <p>Subscribe to messages on the RESPONSE queue</p>
+        </div>
+        <div class='code grid-60 mobile-grid-100 not-empty'>
+          <pre>    q.subscribe({
+      ack: true
+    }, (message, headers, deliveryInfo, messageObject) => {</pre>
+        </div>
+      </div>
+      <div class='clear'>
+      </div>
+    
+      <div class='section'>
+        <div class='comment grid-40 mobile-grid-100 not-empty'>
+          <p>Lookup response handle for this message</p>
+        </div>
+        <div class='code grid-60 mobile-grid-100 not-empty'>
+          <pre>      if (!Object.keys(cache).includes(deliveryInfo.correlationId)) {</pre>
+        </div>
+      </div>
+      <div class='clear'>
+      </div>
+    
+      <div class='section'>
+        <div class='comment grid-40 mobile-grid-100 not-empty'>
+          <p>If not found reject and requeue</p>
+        </div>
+        <div class='code grid-60 mobile-grid-100 not-empty'>
+          <pre>        return q.shift(true, true)
+      }
+</pre>
+        </div>
+      </div>
+      <div class='clear'>
+      </div>
+    
+      <div class='section'>
+        <div class='comment grid-40 mobile-grid-100 not-empty'>
+          <p>Get the cached objects</p>
+        </div>
+        <div class='code grid-60 mobile-grid-100 not-empty'>
+          <pre>      let {response, next, timeoutId} = cache[deliveryInfo.correlationId];
+</pre>
+        </div>
+      </div>
+      <div class='clear'>
+      </div>
+    
+      <div class='section'>
+        <div class='comment grid-40 mobile-grid-100 not-empty'>
+          <p>Cancel the timeout</p>
+        </div>
+        <div class='code grid-60 mobile-grid-100 not-empty'>
+          <pre>      clearTimeout(timeoutId);
+</pre>
+        </div>
+      </div>
+      <div class='clear'>
+      </div>
+    
+      <div class='section'>
+        <div class='comment grid-40 mobile-grid-100 not-empty'>
+          <p>Clean up the cache</p>
+        </div>
+        <div class='code grid-60 mobile-grid-100 not-empty'>
+          <pre>      delete cache[deliveryInfo.correlationId];
+</pre>
+        </div>
+      </div>
+      <div class='clear'>
+      </div>
+    
+      <div class='section'>
+        <div class='comment grid-40 mobile-grid-100 not-empty'>
+          <p>Acknowledge the message</p>
+        </div>
+        <div class='code grid-60 mobile-grid-100 not-empty'>
+          <pre>      q.shift();
+</pre>
+        </div>
+      </div>
+      <div class='clear'>
+      </div>
+    
+      <div class='section'>
+        <div class='comment grid-40 mobile-grid-100 not-empty'>
+          <p>Send the response</p>
+        </div>
+        <div class='code grid-60 mobile-grid-100 not-empty'>
+          <pre>      response.send(message);
+      return next();
+
+    });
+  });
+});
+
+</pre>
+        </div>
+      </div>
+      <div class='clear'>
+      </div>
+    
+      <div class='section'>
+        <div class='comment grid-40 mobile-grid-100 not-empty'>
+          <p>Report RabbitMQ connection errors, but don&#39;t exit.  This will keep trying to  connect.</p>
+        </div>
+        <div class='code grid-60 mobile-grid-100 not-empty'>
+          <pre>connection.on('error', (err) => {
+  console.error('ERR:', err);
+});
+</pre>
+        </div>
+      </div>
+      <div class='clear'>
+      </div>
+    
+      <div class='section'>
+        <div class='comment grid-40 mobile-grid-100 not-empty'>
+          <p>Catch all unhandled exceptions.  Report and bail out.</p>
+        </div>
+        <div class='code grid-60 mobile-grid-100 not-empty'>
+          <pre>process.on('uncaughtexception', (e) => {
+  console.error(`ERR: ${e}`);
+  process.exit(70);
+});
+</pre>
+        </div>
+      </div>
+      <div class='clear'>
+      </div>
+    
+      <div class='section'>
+        <div class='comment grid-40 mobile-grid-100 not-empty'>
+          <p>Do anything necessary to shutdown gracefully</p>
+        </div>
+        <div class='code grid-60 mobile-grid-100 not-empty'>
+          <pre>process.on('SIGINT', () => {
+  console.log('Shutdown gracefully');
+  process.exit();
+})
+.</pre>
+        </div>
+      </div>
+      <div class='clear'>
+      </div>
+    
+  </div>
+</body>
+</html>
